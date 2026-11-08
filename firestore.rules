@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        (request.auth.token.email == "araujosmatheus88@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    // Helper functions for entity validation
+    function isValidUser(data) {
+      return data.uid is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.role in ['USER', 'ADMIN'] &&
+             data.isBlocked is bool;
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 60 &&
+             data.slug is string && data.slug.size() > 0 && data.slug.size() <= 60 &&
+             data.colorHex is string &&
+             data.sortOrder is int;
+    }
+
+    function isValidDrama(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 150 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.coverVerticalUrl is string && data.coverVerticalUrl.size() <= 600 &&
+             data.categoryId is string &&
+             data.categoryName is string &&
+             data.isPublished is bool;
+    }
+
+    function isValidEpisode(data) {
+      return data.dramaId is string &&
+             data.episodeNumber is int && data.episodeNumber > 0 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 150 &&
+             data.videoUrl is string && data.videoUrl.size() > 0 && data.videoUrl.size() <= 600 &&
+             data.durationSeconds is int && data.durationSeconds >= 0 &&
+             data.isPublished is bool;
+    }
+
+    function isValidFavorite(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.dramaId is string;
+    }
+
+    function isValidWatchProgress(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.dramaId is string &&
+             data.episodeId is string &&
+             data.currentPositionMs is int && data.currentPositionMs >= 0;
+    }
+
+    function isValidAppSettings(data) {
+      return data.vpsBaseUrl is string && data.vpsBaseUrl.size() > 0 && data.vpsBaseUrl.size() <= 300 &&
+             data.cdnEnabled is bool &&
+             data.defaultHlsEnabled is bool;
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+
+      // Create: Users can register themselves with USER role only; Admin can create any
+      allow create: if isSignedIn() && isValidId(userId) &&
+                       ((request.auth.uid == userId && request.resource.data.uid == request.auth.uid && request.resource.data.role == 'USER') || isAdmin()) &&
+                       isValidUser(request.resource.data);
+
+      // Update: Users can update their profile (cannot change role or isBlocked); Admin can change any field
+      allow update: if isSignedIn() &&
+                       (isAdmin() ||
+                        (request.auth.uid == userId &&
+                         request.resource.data.uid == resource.data.uid &&
+                         request.resource.data.role == resource.data.role &&
+                         request.resource.data.isBlocked == resource.data.isBlocked &&
+                         isValidUser(request.resource.data)));
+
+      allow delete: if isAdmin();
+    }
+
+    // --- Categories Collection ---
+    match /categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin() && (request.method == 'delete' || isValidCategory(request.resource.data));
+    }
+
+    // --- Dramas Collection ---
+    match /dramas/{dramaId} {
+      allow get: if isSignedIn() && (resource.data.isPublished == true || isAdmin());
+      allow list: if isSignedIn();
+      allow create, update, delete: if isAdmin() && (request.method == 'delete' || isValidDrama(request.resource.data));
+    }
+
+    // --- Seasons Collection ---
+    match /seasons/{seasonId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --- Episodes Collection ---
+    match /episodes/{episodeId} {
+      allow get: if isSignedIn() && (resource.data.isPublished == true || isAdmin());
+      allow list: if isSignedIn();
+      allow create, update, delete: if isAdmin() && (request.method == 'delete' || isValidEpisode(request.resource.data));
+    }
+
+    // --- Favorites Collection ---
+    match /favorites/{favoriteId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(favoriteId) && isValidFavorite(request.resource.data);
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && isValidFavorite(request.resource.data);
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // --- WatchHistory Collection ---
+    match /watchHistory/{historyId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(historyId) && isValidWatchProgress(request.resource.data);
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && isValidWatchProgress(request.resource.data);
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // --- AppSettings Collection ---
+    match /appSettings/{settingId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin() && (request.method == 'delete' || isValidAppSettings(request.resource.data));
+    }
+  }
+}

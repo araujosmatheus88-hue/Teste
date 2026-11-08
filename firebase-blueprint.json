@@ -1,0 +1,164 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in Drama Box",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User authentication UID" },
+        "name": { "type": "string", "description": "User display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "avatarUrl": { "type": "string", "description": "Avatar photo URL" },
+        "role": { "type": "string", "enum": ["USER", "ADMIN"], "description": "Role permissions" },
+        "isBlocked": { "type": "boolean", "description": "Whether user is blocked" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp via serverTimestamp" },
+        "lastAccess": { "type": "string", "format": "date-time", "description": "Last access timestamp via serverTimestamp" }
+      },
+      "required": ["uid", "name", "email", "role", "isBlocked", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Drama category and genre",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Category name" },
+        "slug": { "type": "string", "description": "Unique slug identifier" },
+        "iconName": { "type": "string", "description": "Icon identifier" },
+        "colorHex": { "type": "string", "description": "Color hex" },
+        "sortOrder": { "type": "integer", "description": "Display order index" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["name", "slug", "colorHex", "sortOrder"]
+    },
+    "Drama": {
+      "title": "Drama",
+      "description": "Short drama mini-novel entry",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Drama title" },
+        "description": { "type": "string", "description": "Drama synopsis" },
+        "coverVerticalUrl": { "type": "string", "description": "Vertical poster URL 2:3" },
+        "bannerHorizontalUrl": { "type": "string", "description": "Horizontal banner URL 16:9" },
+        "categoryId": { "type": "string", "description": "Primary category ID" },
+        "categoryName": { "type": "string", "description": "Category title" },
+        "genres": { "type": "array", "description": "Genre tags list" },
+        "language": { "type": "string", "description": "Audio language or subtitle" },
+        "releaseYear": { "type": "integer", "description": "Year of release" },
+        "totalEpisodes": { "type": "integer", "description": "Total number of episodes" },
+        "isPublished": { "type": "boolean", "description": "Published state" },
+        "isFeatured": { "type": "boolean", "description": "Whether displayed on hero banner" },
+        "isTrending": { "type": "boolean", "description": "Trending flag" },
+        "isNewRelease": { "type": "boolean", "description": "New release badge flag" },
+        "viewsCount": { "type": "integer", "description": "Total views count" },
+        "rating": { "type": "number", "description": "Rating score from 0 to 5" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title", "description", "coverVerticalUrl", "categoryId", "categoryName", "isPublished", "createdAt"]
+    },
+    "Season": {
+      "title": "Season",
+      "description": "Drama season",
+      "type": "object",
+      "properties": {
+        "dramaId": { "type": "string", "description": "Parent drama ID" },
+        "seasonNumber": { "type": "integer", "description": "Season number" },
+        "title": { "type": "string", "description": "Season title" }
+      },
+      "required": ["dramaId", "seasonNumber", "title"]
+    },
+    "Episode": {
+      "title": "Episode",
+      "description": "Individual short drama episode with VPS video URL",
+      "type": "object",
+      "properties": {
+        "dramaId": { "type": "string", "description": "Parent drama ID" },
+        "seasonId": { "type": "string", "description": "Season ID" },
+        "episodeNumber": { "type": "integer", "description": "Episode sequence number" },
+        "title": { "type": "string", "description": "Episode title" },
+        "description": { "type": "string", "description": "Episode description" },
+        "videoUrl": { "type": "string", "description": "External VPS video URL (MP4 or HLS .m3u8)" },
+        "durationSeconds": { "type": "integer", "description": "Duration in seconds" },
+        "thumbnailUrl": { "type": "string", "description": "Optional thumbnail URL" },
+        "isPublished": { "type": "boolean", "description": "Episode publication status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["dramaId", "episodeNumber", "title", "videoUrl", "durationSeconds", "isPublished"]
+    },
+    "Favorite": {
+      "title": "Favorite",
+      "description": "User bookmarked drama",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User UID" },
+        "dramaId": { "type": "string", "description": "Drama ID" },
+        "addedAt": { "type": "string", "format": "date-time", "description": "Timestamp added to list" }
+      },
+      "required": ["userId", "dramaId"]
+    },
+    "WatchProgress": {
+      "title": "WatchProgress",
+      "description": "User watch progress for continue watching feature",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User UID" },
+        "dramaId": { "type": "string", "description": "Drama ID" },
+        "episodeId": { "type": "string", "description": "Episode ID" },
+        "dramaTitle": { "type": "string", "description": "Drama title cache" },
+        "episodeTitle": { "type": "string", "description": "Episode title cache" },
+        "episodeNumber": { "type": "integer", "description": "Episode number" },
+        "coverUrl": { "type": "string", "description": "Cover URL cache" },
+        "currentPositionMs": { "type": "integer", "description": "Position in milliseconds" },
+        "totalDurationMs": { "type": "integer", "description": "Total duration in milliseconds" },
+        "lastPlayedAt": { "type": "string", "format": "date-time", "description": "Last playback timestamp" },
+        "isCompleted": { "type": "boolean", "description": "Whether episode was watched to completion" }
+      },
+      "required": ["userId", "dramaId", "episodeId", "currentPositionMs"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "System and VPS configuration settings",
+      "type": "object",
+      "properties": {
+        "vpsBaseUrl": { "type": "string", "description": "Base VPS server URL" },
+        "cdnEnabled": { "type": "boolean", "description": "Whether CDN is enabled" },
+        "defaultHlsEnabled": { "type": "boolean", "description": "Whether HLS is the default format" },
+        "appVersion": { "type": "string", "description": "App version string" }
+      },
+      "required": ["vpsBaseUrl"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile collection"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Drama categories"
+    },
+    "/dramas/{dramaId}": {
+      "schema": { "$ref": "#/entities/Drama" },
+      "description": "Catalog of mini-dramas"
+    },
+    "/seasons/{seasonId}": {
+      "schema": { "$ref": "#/entities/Season" },
+      "description": "Drama seasons"
+    },
+    "/episodes/{episodeId}": {
+      "schema": { "$ref": "#/entities/Episode" },
+      "description": "Drama episodes"
+    },
+    "/favorites/{favoriteId}": {
+      "schema": { "$ref": "#/entities/Favorite" },
+      "description": "User favorites"
+    },
+    "/watchHistory/{historyId}": {
+      "schema": { "$ref": "#/entities/WatchProgress" },
+      "description": "User watch progress and continue watching"
+    },
+    "/appSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/AppSettings" },
+      "description": "Global application and VPS settings"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Drama Box",
+  "description": "Plataforma de streaming de mininovelas e dramas curtos com episódios verticais e painel administrativo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
